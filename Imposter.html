@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+<title>Ko ho Imposter?</title>
+<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red: #D32F2F; --red-dark: #B71C1C; --red-light: #FFEBEE;
+  --gold: #FFC107; --bg: #F5F5F5; --card: #FFFFFF;
+  --text: #1A1A1A; --text-muted: #6B6B6B;
+  --radius: 16px; --shadow: 0 4px 24px rgba(0,0,0,0.10);
+}
+body { font-family: 'Mukta','Noto Sans Devanagari',sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; touch-action: pan-x pan-y; -webkit-user-select: none; user-select: none; }
+.screen { display: none; min-height: 100vh; flex-direction: column; align-items: center; justify-content: flex-start; animation: fadeIn 0.32s ease; }
+.screen.active { display: flex; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);} }
+@keyframes pulse { 0%,100%{transform:scale(1);}50%{transform:scale(1.04);} }
+@keyframes revealPop { 0%{transform:scale(0.75) rotateY(90deg);opacity:0;}60%{transform:scale(1.06) rotateY(-4deg);opacity:1;}100%{transform:scale(1) rotateY(0);opacity:1;} }
+@keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;} }
+
+/* LANG TOGGLES */
+.lang-pill { display:flex; background:rgba(255,255,255,0.18); border-radius:30px; border:1.5px solid rgba(255,255,255,0.3); overflow:hidden; }
+.lang-pill-btn { padding:6px 15px; border:none; background:transparent; color:rgba(255,255,255,0.65); font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; transition:all 0.18s; }
+.lang-pill-btn.active { background:rgba(255,255,255,0.28); color:#FFF; }
+.topbar-lang { display:flex; background:var(--card); border-radius:30px; border:1.5px solid #E0E0E0; overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,0.07); }
+.topbar-lang-btn { padding:5px 13px; border:none; background:transparent; font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; color:var(--text-muted); transition:all 0.18s; }
+.topbar-lang-btn.active { background:var(--red); color:#FFF; }
+
+/* HOME */
+#home { background:linear-gradient(160deg,#D32F2F 0%,#B71C1C 45%,#7B0000 100%); justify-content:center; position:relative; overflow:hidden; }
+#home::before { content:''; position:absolute; top:-80px; right:-80px; width:300px; height:300px; background:rgba(255,193,7,0.12); border-radius:50%; }
+#home::after { content:''; position:absolute; bottom:-60px; left:-60px; width:220px; height:220px; background:rgba(255,255,255,0.05); border-radius:50%; }
+.home-inner { z-index:1; display:flex; flex-direction:column; align-items:center; width:100%; max-width:420px; padding:40px 24px 60px; }
+.home-lang-row { width:100%; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.logo-eye { font-size:72px; margin-bottom:8px; filter:drop-shadow(0 4px 12px rgba(0,0,0,0.3)); animation:pulse 3s ease-in-out infinite; }
+.home-title { font-size:36px; font-weight:800; color:#FFF; letter-spacing:-0.5px; line-height:1.1; text-align:center; }
+.home-subtitle { font-size:15px; color:rgba(255,255,255,0.68); margin:8px 0 36px; text-align:center; letter-spacing:1px; }
+.btn-primary { width:100%; padding:18px; background:var(--gold); color:#1A1A1A; border:none; border-radius:var(--radius); font-size:20px; font-weight:700; font-family:inherit; cursor:pointer; transition:all 0.18s; box-shadow:0 4px 20px rgba(255,193,7,0.35); margin-bottom:12px; }
+.btn-primary:active { transform:scale(0.97); }
+.btn-secondary { width:100%; padding:15px; background:rgba(255,255,255,0.12); color:#FFF; border:1.5px solid rgba(255,255,255,0.28); border-radius:var(--radius); font-size:17px; font-weight:600; font-family:inherit; cursor:pointer; transition:all 0.18s; margin-bottom:10px; }
+.btn-secondary:active { transform:scale(0.97); }
+.home-badge { margin-top:24px; font-size:13px; color:rgba(255,255,255,0.38); text-align:center; }
+.btn-sound-toggle { display:flex; align-items:center; justify-content:center; width:38px; height:38px; background:rgba(255,255,255,0.15); color:#FFF; border:1.5px solid rgba(255,255,255,0.28); border-radius:50%; font-size:18px; font-family:inherit; cursor:pointer; transition:all 0.18s; padding:0; flex-shrink:0; }
+.btn-sound-toggle:active { transform:scale(0.92); }
+.btn-sound-toggle.muted { background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.12); opacity:0.55; }
+
+/* TOPBAR */
+.topbar { width:100%; display:flex; align-items:center; padding:52px 20px 16px; gap:10px; max-width:480px; margin:0 auto; }
+.back-btn { display:flex; align-items:center; gap:6px; padding:8px 14px 8px 10px; background:var(--card); border:none; border-radius:30px; font-size:14px; font-weight:700; color:var(--red); cursor:pointer; box-shadow:0 2px 10px rgba(0,0,0,0.08); flex-shrink:0; transition:all 0.18s; letter-spacing:0.2px; font-family:inherit; }
+.back-btn::before { content:'‹'; font-size:22px; line-height:1; font-weight:400; margin-top:-1px; }
+.back-btn:active { transform:scale(0.95); box-shadow:none; }
+.topbar-title { font-size:20px; font-weight:700; color:var(--text); flex:1; }
+
+/* SCREEN BODY */
+.screen-body { width:100%; max-width:480px; padding:0 16px 40px; flex:1; }
+.section-label { font-size:13px; font-weight:600; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:14px; margin-top:4px; }
+
+/* CATEGORIES */
+#categories { background:var(--bg); }
+.cat-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.cat-sel-info { font-size:14px; color:var(--text-muted); display:flex; align-items:center; gap:8px; }
+.cat-sel-badge { background:var(--red); color:#FFF; border-radius:20px; padding:2px 10px; font-size:13px; font-weight:700; }
+.sel-all-btn { background:none; border:1.5px solid var(--red); color:var(--red); border-radius:20px; padding:5px 14px; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; transition:all 0.18s; white-space:nowrap; }
+.sel-all-btn:active { transform:scale(0.96); }
+.category-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.cat-card { background:var(--card); border-radius:var(--radius); padding:20px 14px; display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; transition:all 0.18s; box-shadow:0 2px 12px rgba(0,0,0,0.06); border:2.5px solid transparent; position:relative; }
+.cat-card:active { transform:scale(0.96); }
+.cat-card.selected { border-color:var(--red); background:var(--red-light); }
+.cat-card.selected .cat-check { display:flex; }
+.cat-icon { font-size:36px; line-height:1; }
+.cat-name { font-size:14px; font-weight:700; text-align:center; color:var(--text); line-height:1.2; }
+.cat-count { font-size:12px; color:var(--text-muted); }
+.cat-check { display:none; position:absolute; top:10px; right:10px; width:22px; height:22px; background:var(--red); border-radius:50%; align-items:center; justify-content:center; color:white; font-size:13px; font-weight:700; }
+.btn-action { width:100%; padding:17px; border:none; border-radius:var(--radius); font-size:18px; font-weight:700; font-family:inherit; cursor:pointer; transition:all 0.18s; margin-bottom:10px; }
+.btn-action.red { background:var(--red); color:white; box-shadow:0 4px 16px rgba(211,47,47,0.3); }
+.btn-action.outline { background:transparent; color:var(--red); border:2px solid var(--red); }
+.btn-action:active { transform:scale(0.97); }
+.btn-action:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+
+/* PLAYER COUNT */
+#player-count { background:var(--bg); }
+.count-display { background:var(--card); border-radius:var(--radius); padding:36px 24px; display:flex; flex-direction:column; align-items:center; gap:18px; margin-bottom:16px; box-shadow:var(--shadow); }
+.count-num { font-size:96px; font-weight:800; color:var(--red); line-height:1; }
+.count-label { font-size:17px; color:var(--text-muted); font-weight:600; }
+.count-controls { display:flex; gap:16px; justify-content:center; }
+.count-btn { width:72px; height:72px; border-radius:50%; border:none; font-size:32px; font-weight:700; cursor:pointer; transition:all 0.15s; font-family:inherit; }
+.count-btn.minus { background:#FFEBEE; color:var(--red); }
+.count-btn.plus { background:var(--red); color:white; }
+.count-btn:active { transform:scale(0.9); }
+.count-btn:disabled { opacity:0.35; cursor:not-allowed; }
+.selected-cats-pills { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+.cat-pill { background:var(--red-light); border:1.5px solid var(--red); border-radius:20px; padding:4px 12px; font-size:13px; font-weight:600; color:var(--red); }
+.players-preview { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; padding:16px; background:var(--card); border-radius:var(--radius); box-shadow:0 2px 8px rgba(0,0,0,0.05); margin-bottom:18px; }
+.player-dot { width:36px; height:36px; border-radius:50%; background:var(--red); display:flex; align-items:center; justify-content:center; color:white; font-size:13px; font-weight:700; }
+
+/* PLAYER NAMES */
+#player-names { background:var(--bg); }
+.name-input-row { display:flex; align-items:center; gap:10px; background:var(--card); border-radius:12px; padding:10px 14px; margin-bottom:8px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+.name-input-avatar { width:34px; height:34px; border-radius:50%; background:var(--red); display:flex; align-items:center; justify-content:center; color:#FFF; font-size:14px; font-weight:700; flex-shrink:0; }
+.name-input-field { flex:1; border:none; outline:none; font-size:16px; font-family:inherit; background:transparent; color:var(--text); -webkit-user-select:text; user-select:text; }
+.name-input-field::placeholder { color:#BDBDBD; }
+.imposter-count-box { background:var(--card); border-radius:var(--radius); padding:18px 20px; margin:16px 0; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+.imposter-count-label { font-size:14px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px; }
+.imposter-count-controls { display:flex; align-items:center; justify-content:center; gap:20px; margin-bottom:10px; }
+.imp-btn { width:48px; height:48px; border-radius:50%; border:none; font-size:24px; font-weight:700; cursor:pointer; transition:all 0.15s; font-family:inherit; }
+.imp-btn.minus { background:#FFEBEE; color:var(--red); }
+.imp-btn.plus { background:var(--red); color:white; }
+.imp-btn:active { transform:scale(0.9); }
+.imp-btn:disabled { opacity:0.35; cursor:not-allowed; }
+.imp-num { font-size:48px; font-weight:800; color:var(--red); min-width:60px; text-align:center; line-height:1; }
+.imposter-count-hint { text-align:center; font-size:13px; color:var(--text-muted); }
+
+/* HINT TOGGLE */
+.hint-toggle-box { background:var(--card); border-radius:var(--radius); padding:16px 18px; margin:0 0 16px; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+.hint-toggle-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.hint-toggle-info { flex:1; }
+.hint-toggle-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:3px; }
+.hint-toggle-desc { font-size:13px; color:var(--text-muted); line-height:1.4; }
+.toggle-btn { width:50px; height:28px; border-radius:14px; background:#E0E0E0; border:none; cursor:pointer; position:relative; transition:background 0.22s; flex-shrink:0; padding:0; }
+.toggle-btn.on { background:var(--red); }
+.toggle-knob { width:22px; height:22px; border-radius:50%; background:#FFF; position:absolute; top:3px; left:3px; transition:left 0.22s; box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+.toggle-btn.on .toggle-knob { left:25px; }
+/* IMPOSTER HINT DISPLAY on role reveal */
+.imp-hint-box { background:rgba(255,255,255,0.15); border-radius:12px; padding:12px 16px; margin-top:14px; border:1px solid rgba(255,255,255,0.25); }
+.imp-hint-label { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,0.55); margin-bottom:5px; }
+.imp-hint-text { font-size:16px; font-weight:600; color:#FFF; line-height:1.4; }
+#random-start { background:linear-gradient(160deg,#1A237E 0%,#283593 100%); justify-content:center; }
+.random-start-inner { display:flex; flex-direction:column; align-items:center; padding:40px 28px; max-width:380px; text-align:center; }
+.random-start-icon { font-size:80px; margin-bottom:20px; animation:pulse 1s ease-in-out 3; }
+.random-start-label { font-size:15px; font-weight:600; color:rgba(255,255,255,0.55); letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; }
+.random-start-name { font-size:46px; font-weight:800; color:#FFF; margin-bottom:14px; line-height:1.1; }
+.random-start-sub { font-size:15px; color:rgba(255,255,255,0.6); background:rgba(255,255,255,0.07); border-radius:12px; padding:12px 18px; margin-bottom:36px; line-height:1.5; }
+.btn-continue { width:100%; padding:18px; background:var(--gold); color:#1A1A1A; border:none; border-radius:var(--radius); font-size:19px; font-weight:700; font-family:inherit; cursor:pointer; transition:all 0.18s; box-shadow:0 4px 20px rgba(255,193,7,0.3); }
+.btn-continue:active { transform:scale(0.97); }
+
+/* PASS PHONE */
+#pass-phone { background:linear-gradient(160deg,#1A237E 0%,#283593 100%); justify-content:center; }
+.pass-inner { display:flex; flex-direction:column; align-items:center; padding:40px 28px; max-width:380px; text-align:center; }
+.pass-icon { font-size:80px; margin-bottom:20px; }
+.pass-player-num { font-size:15px; font-weight:600; color:rgba(255,255,255,0.55); letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+.pass-player-name { font-size:42px; font-weight:800; color:#FFF; margin-bottom:12px; line-height:1; }
+.pass-warning { font-size:14px; color:rgba(255,255,255,0.55); background:rgba(255,255,255,0.07); border-radius:12px; padding:12px 18px; margin-bottom:36px; line-height:1.5; }
+.btn-reveal { width:100%; padding:20px; background:var(--gold); color:#1A1A1A; border:none; border-radius:var(--radius); font-size:20px; font-weight:700; font-family:inherit; cursor:pointer; transition:all 0.18s; box-shadow:0 4px 20px rgba(255,193,7,0.3); }
+.btn-reveal:active { transform:scale(0.97); }
+
+/* ROLE REVEAL */
+#role-reveal { background:var(--bg); justify-content:center; }
+.reveal-inner { display:flex; flex-direction:column; align-items:center; padding:32px 24px; max-width:400px; width:100%; text-align:center; animation:revealPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.reveal-card { width:100%; border-radius:24px; padding:40px 28px; margin-bottom:20px; box-shadow:0 8px 40px rgba(0,0,0,0.12); }
+.reveal-card.normal { background:var(--card); }
+.reveal-card.imposter { background:linear-gradient(135deg,#1565C0 0%,#0D47A1 100%); }
+.reveal-role-label { font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:14px; }
+.reveal-card.normal .reveal-role-label { color:var(--text-muted); }
+.reveal-card.imposter .reveal-role-label { color:rgba(255,255,255,0.6); }
+.reveal-big-icon { font-size:64px; margin-bottom:14px; }
+.reveal-word { font-size:44px; font-weight:800; color:var(--red); line-height:1; margin-bottom:8px; }
+.reveal-card.imposter .reveal-word { color:#FFF; font-size:34px; }
+.reveal-hint { font-size:15px; color:var(--text-muted); line-height:1.5; }
+.reveal-card.imposter .reveal-hint { color:rgba(255,255,255,0.65); }
+.btn-hide-pass { width:100%; padding:18px; background:var(--red); color:white; border:none; border-radius:var(--radius); font-size:18px; font-weight:700; font-family:inherit; cursor:pointer; transition:all 0.18s; box-shadow:0 4px 16px rgba(211,47,47,0.3); }
+.btn-hide-pass:active { transform:scale(0.97); }
+
+/* DISCUSSION */
+#discussion { background:var(--bg); }
+.discussion-rules { background:var(--card); border-radius:var(--radius); padding:18px 20px; margin-bottom:18px; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+.rule-item { display:flex; gap:12px; align-items:flex-start; margin-bottom:11px; font-size:15px; line-height:1.5; }
+.rule-item:last-child { margin-bottom:0; }
+.rule-num { width:24px; height:24px; background:var(--red); border-radius:50%; color:white; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+
+/* VOTING */
+#voting { background:var(--bg); }
+.vote-list { display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
+.vote-item { background:var(--card); border-radius:var(--radius); padding:14px 18px; display:flex; align-items:center; gap:14px; cursor:pointer; transition:all 0.18s; border:2.5px solid transparent; box-shadow:0 2px 10px rgba(0,0,0,0.05); }
+.vote-item:active { transform:scale(0.98); }
+.vote-item.voted { border-color:var(--red); background:var(--red-light); }
+.vote-avatar { width:44px; height:44px; border-radius:50%; background:var(--red); display:flex; align-items:center; justify-content:center; color:white; font-size:17px; font-weight:700; flex-shrink:0; }
+.vote-name { font-size:17px; font-weight:600; flex:1; }
+.vote-check { width:26px; height:26px; border-radius:50%; background:var(--red); color:white; display:none; align-items:center; justify-content:center; font-size:15px; }
+.vote-item.voted .vote-check { display:flex; }
+.vote-tally { background:var(--card); border-radius:var(--radius); padding:13px 18px; margin-bottom:14px; font-size:14px; color:var(--text-muted); box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+
+/* RESULTS */
+#results { background:linear-gradient(160deg,#D32F2F 0%,#B71C1C 50%,#7B0000 100%); justify-content:center; }
+.results-inner { display:flex; flex-direction:column; align-items:center; padding:40px 24px; max-width:400px; width:100%; text-align:center; }
+.result-trophy { font-size:72px; margin-bottom:14px; }
+.result-title { font-size:28px; font-weight:800; color:#FFF; margin-bottom:4px; }
+.result-subtitle { font-size:15px; color:rgba(255,255,255,0.65); margin-bottom:28px; }
+.result-card { width:100%; background:rgba(255,255,255,0.12); border-radius:20px; padding:22px; margin-bottom:14px; border:1px solid rgba(255,255,255,0.18); }
+.result-row { display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid rgba(255,255,255,0.1); }
+.result-row:last-child { border-bottom:none; }
+.result-key { font-size:14px; color:rgba(255,255,255,0.6); font-weight:600; }
+.result-val { font-size:17px; font-weight:700; color:#FFF; }
+.result-val.highlight { color:var(--gold); font-size:20px; }
+.vote-result-list { width:100%; display:flex; flex-direction:column; gap:7px; margin-bottom:22px; }
+.vote-result-item { background:rgba(255,255,255,0.10); border-radius:12px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; border:1px solid rgba(255,255,255,0.13); }
+.vote-result-name { font-size:15px; font-weight:600; color:#FFF; }
+.vote-result-bar-wrap { flex:1; margin:0 10px; height:7px; background:rgba(255,255,255,0.15); border-radius:4px; }
+.vote-result-bar { height:100%; background:var(--gold); border-radius:4px; transition:width 0.6s ease; }
+.vote-result-count { font-size:14px; font-weight:700; color:var(--gold); min-width:18px; text-align:right; }
+.btn-white { width:100%; padding:17px; border:none; border-radius:var(--radius); font-size:17px; font-weight:700; font-family:inherit; cursor:pointer; transition:all 0.18s; margin-bottom:10px; }
+.btn-white.solid { background:#FFF; color:var(--red); }
+.btn-white.ghost { background:rgba(255,255,255,0.12); color:#FFF; border:1.5px solid rgba(255,255,255,0.28); }
+.btn-white:active { transform:scale(0.97); }
+
+/* HOW TO PLAY */
+#howtoplay { background:var(--bg); }
+.htp-step { background:var(--card); border-radius:var(--radius); padding:16px 18px; margin-bottom:10px; display:flex; gap:14px; align-items:flex-start; box-shadow:0 2px 10px rgba(0,0,0,0.05); }
+.htp-icon { font-size:28px; flex-shrink:0; margin-top:2px; }
+.htp-title { font-size:16px; font-weight:700; margin-bottom:3px; }
+.htp-desc { font-size:14px; color:var(--text-muted); line-height:1.5; }
+
+/* CONFETTI */
+.confetti-container { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999; }
+.confetti-piece { position:absolute; }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home" class="screen active">
+  <div class="home-inner">
+    <div class="home-lang-row">
+      <div class="lang-pill">
+        <button class="lang-pill-btn active" id="hLangNE" onclick="setLang('ne')" data-sound="tap">नेपाली</button>
+        <button class="lang-pill-btn" id="hLangEN" onclick="setLang('en')" data-sound="tap">English</button>
+      </div>
+      <button class="btn-sound-toggle" id="soundToggleBtn" onclick="toggleSound()">🔊</button>
+    </div>
+    <div class="logo-eye">🕵️</div>
+    <div class="home-title" id="homeTitle">को हो Imposter?</div>
+    <div class="home-subtitle" id="homeSubtitle">नेपाली पार्टी खेल · ३–१२ खेलाडी</div>
+    <button class="btn-primary" onclick="goTo('categories')" id="homePlayBtn" data-sound="next">🎮 खेल सुरु गर्नुस्</button>
+    <button class="btn-secondary" onclick="goTo('howtoplay')" id="homeHtpBtn" data-sound="tap">📖 कसरी खेल्ने?</button>
+    <div class="home-badge" id="homeBadge">मजेदार · रोमाञ्चक · नेपाली</div>
+  </div>
+</div>
+
+<!-- HOW TO PLAY -->
+<div id="howtoplay" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('home')" id="htpBack" data-sound="back">Back</button>
+    <span class="topbar-title" id="htpTitle">कसरी खेल्ने?</span>
+    <div class="topbar-lang">
+      <button class="topbar-lang-btn active" id="htpNE" onclick="setLang('ne')" data-sound="tap">NE</button>
+      <button class="topbar-lang-btn" id="htpEN" onclick="setLang('en')" data-sound="tap">EN</button>
+    </div>
+  </div>
+  <div class="screen-body" id="htpBody"></div>
+</div>
+
+<!-- CATEGORIES -->
+<div id="categories" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('home')" id="catBack" data-sound="back">Back</button>
+    <span class="topbar-title" id="catTitle">वर्ग छान्नुस्</span>
+    <div class="topbar-lang">
+      <button class="topbar-lang-btn active" id="catNE" onclick="setLang('ne')" data-sound="tap">NE</button>
+      <button class="topbar-lang-btn" id="catEN" onclick="setLang('en')" data-sound="tap">EN</button>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div class="cat-toolbar">
+      <div class="cat-sel-info">
+        <span id="catSelLabel">छानिएको:</span>
+        <span class="cat-sel-badge" id="selCount">0</span>
+      </div>
+      <button class="sel-all-btn" id="selAllBtn" onclick="toggleSelectAll()" data-sound="select">सबै छान्नुस्</button>
+    </div>
+    <div class="category-grid" id="catGrid"></div>
+    <div style="height:16px"></div>
+    <button class="btn-action red" onclick="goToPlayerCount()" id="catNextBtn" style="display:none" data-sound="next">अर्को →</button>
+  </div>
+</div>
+
+<!-- PLAYER COUNT -->
+<div id="player-count" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('categories')" id="pcBack" data-sound="back">Back</button>
+    <span class="topbar-title" id="pcTitle">खेलाडी सङ्ख्या</span>
+    <div class="topbar-lang">
+      <button class="topbar-lang-btn active" id="pcNE" onclick="setLang('ne')" data-sound="tap">NE</button>
+      <button class="topbar-lang-btn" id="pcEN" onclick="setLang('en')" data-sound="tap">EN</button>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div class="count-display">
+      <div class="count-label" id="pcLabel">खेलाडीहरू</div>
+      <div class="count-num" id="countNum">4</div>
+      <div class="count-controls">
+        <button class="count-btn minus" id="minusBtn" onclick="changeCount(-1)" data-sound="counter">−</button>
+        <button class="count-btn plus" id="plusBtn" onclick="changeCount(1)" data-sound="counter">+</button>
+      </div>
+    </div>
+    <div class="selected-cats-pills" id="selectedCatPills"></div>
+    <div class="players-preview" id="playersPreview"></div>
+    <button class="btn-action red" onclick="goToPlayerNames()" id="pcStartBtn" data-sound="next">अर्को →</button>
+  </div>
+</div>
+
+<!-- PLAYER NAMES -->
+<div id="player-names" class="screen">
+  <div class="topbar">
+    <button class="back-btn" onclick="goTo('player-count')" id="pnBack" data-sound="back">Back</button>
+    <span class="topbar-title" id="pnTitle">खेलाडीको नाम</span>
+    <div class="topbar-lang">
+      <button class="topbar-lang-btn active" id="pnNE" onclick="setLang('ne')" data-sound="tap">NE</button>
+      <button class="topbar-lang-btn" id="pnEN" onclick="setLang('en')" data-sound="tap">EN</button>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div class="section-label" id="pnNamesLabel">नाम लेख्नुस्</div>
+    <div id="nameInputList"></div>
+    <div class="imposter-count-box">
+      <div class="imposter-count-label" id="pnImpLabel">गुप्तचरको सङ्ख्या</div>
+      <div class="imposter-count-controls">
+        <button class="imp-btn minus" id="impMinusBtn" onclick="changeImpCount(-1)" data-sound="counter">−</button>
+        <div class="imp-num" id="impCountNum">1</div>
+        <button class="imp-btn plus" id="impPlusBtn" onclick="changeImpCount(1)" data-sound="counter">+</button>
+      </div>
+      <div class="imposter-count-hint" id="pnImpHint">१ गुप्तचर · ३ खेलाडी</div>
+    </div>
+
+    <div class="hint-toggle-box">
+      <div class="hint-toggle-row">
+        <div class="hint-toggle-info">
+          <div class="hint-toggle-title" id="pnHintTitle">गुप्तचरलाई वर्ग देखाउनुस्</div>
+          <div class="hint-toggle-desc" id="pnHintDesc">गुप्तचरको कार्डमा वर्गको नाम देखिनेछ</div>
+        </div>
+        <button class="toggle-btn" id="hintToggleBtn" onclick="toggleImposterHint()" data-sound="toggle">
+          <div class="toggle-knob"></div>
+        </button>
+      </div>
+    </div>
+
+    <button class="btn-action red" onclick="startGame()" id="pnStartBtn" data-sound="start">🎮 खेल सुरु गर्नुस्</button>
+  </div>
+</div>
+
+<!-- RANDOM START -->
+<div id="random-start" class="screen">
+  <div class="random-start-inner">
+    <div class="random-start-icon">🎲</div>
+    <div class="random-start-label" id="rsLabel">पहिले सुरु गर्ने</div>
+    <div class="random-start-name" id="rsName"></div>
+    <div class="random-start-sub" id="rsSub"></div>
+    <button class="btn-continue" onclick="beginPassPhone()" id="rsBtn" data-sound="next"></button>
+  </div>
+</div>
+
+<!-- PASS PHONE -->
+<div id="pass-phone" class="screen">
+  <div class="pass-inner">
+    <div class="pass-icon">📱</div>
+    <div class="pass-player-num" id="passPlayerNum"></div>
+    <div class="pass-player-name" id="passPlayerName"></div>
+    <div class="pass-warning" id="passWarning"></div>
+    <button class="btn-reveal" onclick="revealRole()" id="revealBtn" data-sound="reveal"></button>
+  </div>
+</div>
+
+<!-- ROLE REVEAL -->
+<div id="role-reveal" class="screen">
+  <div class="reveal-inner">
+    <div id="revealCard" class="reveal-card normal">
+      <div class="reveal-role-label" id="revealLabel"></div>
+      <div class="reveal-big-icon" id="revealIcon">🍜</div>
+      <div class="reveal-word" id="revealWord"></div>
+      <div class="reveal-hint" id="revealHint"></div>
+      <div class="imp-hint-box" id="impHintBox" style="display:none">
+        <div class="imp-hint-label" id="impHintLabel">सङ्केत</div>
+        <div class="imp-hint-text" id="impHintText"></div>
+      </div>
+    </div>
+    <button class="btn-hide-pass" onclick="nextPlayer()" id="hidePassBtn" data-sound="hide"></button>
+  </div>
+</div>
+
+<!-- DISCUSSION -->
+<div id="discussion" class="screen">
+  <div class="topbar">
+    <div style="width:40px"></div>
+    <span class="topbar-title" id="discTitle">छलफल</span>
+    <div class="topbar-lang">
+      <button class="topbar-lang-btn active" id="discNE" onclick="setLang('ne')" data-sound="tap">NE</button>
+      <button class="topbar-lang-btn" id="discEN" onclick="setLang('en')" data-sound="tap">EN</button>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div class="discussion-rules" id="discRules"></div>
+    <button class="btn-action red" onclick="goTo('voting');renderVoting();" id="discVoteBtn" data-sound="next">🗳️ मतदान गर्नुस्</button>
+  </div>
+</div>
+
+<!-- VOTING -->
+<div id="voting" class="screen">
+  <div class="topbar">
+    <div style="width:40px"></div>
+    <span class="topbar-title" id="voteTitle">मतदान</span>
+    <div class="topbar-lang">
+      <button class="topbar-lang-btn active" id="voteNE" onclick="setLang('ne')" data-sound="tap">NE</button>
+      <button class="topbar-lang-btn" id="voteEN" onclick="setLang('en')" data-sound="tap">EN</button>
+    </div>
+  </div>
+  <div class="screen-body">
+    <div style="font-size:15px;color:var(--text-muted);margin-bottom:16px;" id="voteInstruct">कुन खेलाडी गुप्तचर हो?</div>
+    <div class="vote-list" id="voteList"></div>
+    <div class="vote-tally" id="voteTally"></div>
+    <button class="btn-action red" onclick="showResults()" id="voteSubmitBtn" style="display:none" data-sound="next">नतिजा हेर्नुस् →</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="results" class="screen">
+  <div class="results-inner">
+    <div class="result-trophy" id="resultTrophy">🎊</div>
+    <div class="result-title" id="resultTitle"></div>
+    <div class="result-subtitle" id="resultSubtitle"></div>
+    <div class="result-card">
+      <div class="result-row">
+        <span class="result-key" id="rk1">गुप्तचर थियो</span>
+        <span class="result-val highlight" id="resultImposter"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-key" id="rk2">शब्द थियो</span>
+        <span class="result-val" id="resultWord"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-key" id="rk3">वर्ग</span>
+        <span class="result-val" id="resultCat"></span>
+      </div>
+    </div>
+    <button class="btn-white solid" onclick="playAgain()" id="resPlayAgain" data-sound="playagain">🔄 फेरि खेल्नुस्</button>
+    <button class="btn-white ghost" onclick="goTo('home')" id="resMenu" data-sound="back">🏠 मुख्य पृष्ठ</button>
+  </div>
+</div>
+
+<div class="confetti-container" id="confettiContainer"></div>
+
+<script>
+// ========== LANG DATA ==========
+let lang = 'ne';
+
+const T = {
+  ne: {
+    homeTitle:'को हो Imposter?', homeSubtitle:'नेपाली पार्टी खेल · ३–१२ खेलाडी',
+    backBtn:'पछाडि',
+    homePlay:'🎮 खेल सुरु गर्नुस्', homeHtp:'📖 कसरी खेल्ने?', homeBadge:'मजेदार · रोमाञ्चक · नेपाली',
+    htpTitle:'कसरी खेल्ने?', catTitle:'वर्ग छान्नुस्', pcTitle:'खेलाडी सङ्ख्या',
+    pcLabel:'खेलाडीहरू', pcNext:'अर्को →',
+    pnTitle:'खेलाडीको नाम', pnNamesLabel:'नाम लेख्नुस्', pnImpLabel:'गुप्तचरको सङ्ख्या',
+    pnStart:'🎮 खेल सुरु गर्नुस्',
+    namePlaceholder: i => `खेलाडी ${i} को नाम`,
+    pnHintTitle:'गुप्तचरलाई वर्ग देखाउनुस्', pnHintDesc:'गुप्तचरको कार्डमा वर्गको नाम देखिनेछ',
+    rsLabel:'पहिले सुरु गर्ने',
+    impHintLabel:'वर्ग (सङ्केत)', rsSub: name => `${name} ले पहिले सङ्केत दिनेछन्।`,
+    rsBtnText:'📱 फोन पास सुरु गर्नुस्',
+    discTitle:'छलफल', discVote:'🗳️ मतदान गर्नुस्',
+    voteTitle:'मतदान', voteInstruct:'कुन खेलाडी गुप्तचर हो?', voteSubmit:'नतिजा हेर्नुस् →',
+    catSelLabel:'छानिएको:', selAll:'सबै छान्नुस्', deselAll:'सबै हटाउनुस्',
+    catNext:'अर्को →', wordCount: n => `${n} शब्द`,
+    playerLabel: i => `खेलाडी ${i}`, passNum: i => `खेलाडी ${i}`, playerShort: i => `खेलाडी ${i}`,
+    warning:'⚠️ अरू कसैले नहेर्ने गरी फोन लिनुस् — आफ्नो भूमिका मात्र हेर्नुस्!',
+    revealBtn:'👁️ भूमिका हेर्नुस्',
+    roleLabel:'तपाईंको शब्द', roleImpLabel:'तपाईं हुनुहुन्छ',
+    impWord:'गुप्तचर!',
+    normalHint:'यो शब्द सम्झेर सङ्केत दिनुस् — शब्द सीधा भन्नु हुँदैन!',
+    impHint:'तपाईंलाई शब्द थाहा छैन। अरूको सङ्केत सुनेर मिसाउने कोशिस गर्नुस्।',
+    hidePass:'✅ लुकाउनुस् र पास गर्नुस्',
+    discRules:['प्रत्येक खेलाडीले एउटा सङ्केत दिनुस्','शब्द सीधा भन्नु हुँदैन','गुप्तचरले थाहा नपाई मिसाउने कोशिस गर्छ','सबैको सङ्केत सुनेपछि मतदान गर्नुस्'],
+    voteOn: i => `🗳️  खेलाडी ${i} लाई मत दिइयो।`, noVote:'अझै मत दिइएको छैन।',
+    resultWin:'गुप्तचर पक्राउ पर्यो!', resultLose:'गुप्तचर फरार भयो!',
+    resultWinSub:'बधाई छ — टोलीले जित्यो!', resultLoseSub:'गुप्तचरले टोलीलाई हरायो!',
+    resultImposter: i => `खेलाडी ${i}`,
+    rk1:'गुप्तचर थियो', rk2:'शब्द थियो', rk3:'वर्ग',
+    resPlayAgain:'🔄 फेरि खेल्नुस्', resMenu:'🏠 मुख्य पृष्ठ',
+    htpSteps:[
+      ['🗂️','१. वर्ग छान्नुस्','एक वा बढी श्रेणीहरू छान्नुस् — शब्दहरू मिसिन्छन्।'],
+      ['👥','२. खेलाडी सङ्ख्या','३ देखि १२ जनासम्म खेल्न सकिन्छ।'],
+      ['📱','३. फोन पास गर्नुस्','प्रत्येक खेलाडीले फोन लिएर आफ्नो भूमिका हेर्नुस्।'],
+      ['💬','४. सङ्केत दिनुस्','सबैले एक–एक सङ्केत दिन्छन्।'],
+      ['🗳️','५. मत दिनुस्','कुन खेलाडी गुप्तचर हो भन्ने मत दिनुस्।'],
+      ['🏆','६. नतिजा','गुप्तचर पहिचान भयो कि भएन?'],
+    ],
+  },
+  en: {
+    homeTitle:'Ko ho Imposter?', homeSubtitle:'Nepali Party Game · 3–12 Players',
+    backBtn:'Back',
+    homePlay:'🎮 Start Game', homeHtp:'📖 How to Play?', homeBadge:'Fun · Exciting · Nepali Flavor',
+    htpTitle:'How to Play?', catTitle:'Choose Categories', pcTitle:'Number of Players',
+    pcLabel:'Players', pcNext:'Next →',
+    pnTitle:'Player Names', pnNamesLabel:'Enter Names', pnImpLabel:'Number of Imposters',
+    pnStart:'🎮 Start Game',
+    namePlaceholder: i => `Player ${i} name`,
+    pnHintTitle:'Show Category to Imposter', pnHintDesc:"The category name will appear on the imposter's card",
+    rsLabel:'GOES FIRST',
+    impHintLabel:'CATEGORY HINT', rsSub: name => `${name} gives the first clue this round.`,
+    rsBtnText:'📱 Start Passing Phone',
+    discTitle:'Discussion', discVote:'🗳️ Go to Vote',
+    voteTitle:'Vote', voteInstruct:'Who do you think is the Imposter?', voteSubmit:'See Results →',
+    catSelLabel:'Selected:', selAll:'Select All', deselAll:'Deselect All',
+    catNext:'Next →', wordCount: n => `${n} words`,
+    playerLabel: i => `Player ${i}`, passNum: i => `Player ${i}`, playerShort: i => `Player ${i}`,
+    warning:'⚠️ Make sure no one else is watching! Only look at your own role.',
+    revealBtn:'👁️ Reveal My Role',
+    roleLabel:'Your Word Is', roleImpLabel:'You Are',
+    impWord:'The Imposter!',
+    normalHint:"Remember this word and give a clue — don't say the word directly!",
+    impHint:"You don't know the word. Listen to everyone's clues and try to blend in!",
+    hidePass:'✅ Hide & Pass Phone',
+    discRules:['Each player gives one clue about the word','Do not say the word directly','The imposter tries to blend in without knowing the word','Vote after everyone has given their clue'],
+    voteOn: i => `🗳️  Voted for Player ${i}.`, noVote:'No vote cast yet.',
+    resultWin:'Imposter Caught!', resultLose:'Imposter Escaped!',
+    resultWinSub:'Congratulations — the team wins!', resultLoseSub:'The imposter fooled everyone!',
+    resultImposter: i => `Player ${i}`,
+    rk1:'Imposter was', rk2:'Word was', rk3:'Category',
+    resPlayAgain:'🔄 Play Again', resMenu:'🏠 Main Menu',
+    htpSteps:[
+      ['🗂️','1. Choose Categories','Pick one or more — words are pooled together.'],
+      ['👥','2. Set Player Count','3 to 12 players can join.'],
+      ['📱','3. Pass the Phone','Each player secretly views their role.'],
+      ['💬','4. Give Clues','Everyone gives one clue about the word.'],
+      ['🗳️','5. Vote','Vote on who you think is the Imposter.'],
+      ['🏆','6. Results','Did the team catch the Imposter?'],
+    ],
+  },
+};
+
+// ========== CATEGORIES DATA ==========
+const CATEGORIES = [
+  { id:'food', icon:'🍜',
+    ne:{ name:'नेपाली खाना', words:['मम:','दाल भात','सेल रोटी','चतामरी','गुन्द्रुक','योमरी','ढिडो','थुक्पा','चोइला','सेकुवा','समय बाजी','आलु तामा','क्वाटी','खिर','पानी रोटी','फ्राइड मम:','जुजु धउ','बफ चिली','तोङ्बा','चिउरा'] },
+    en:{ name:'Nepali Food', words:['Momo','Dal Bhat','Sel Roti','Chatamari','Gundruk','Yomari','Dhido','Thukpa','Choila','Sekuwa','Samay Baji','Aloo Tama','Kwati','Kheer','Pani Roti','Fried Momo','Juju Dhau','Buff Chilli','Tongba','Chiura'] },
+  },
+  { id:'places', icon:'🏔️',
+    ne:{ name:'नेपालका ठाउँ', words:['काठमाडौं','पोखरा','लुम्बिनी','मुस्ताङ','रारा ताल','सगरमाथा बेस क्याम्प','भक्तपुर दरबार स्क्वायर','पाटन दरबार स्क्वायर','जनकपुर','चितवन राष्ट्रिय निकुञ्ज','नगरकोट','बन्दीपुर','इलाम','गोसाइँकुण्ड','तिलिचो ताल','धरान','हेटौंडा','बुटवल','तानसेन','डोल्पो'] },
+    en:{ name:'Places in Nepal', words:['Kathmandu','Pokhara','Lumbini','Mustang','Rara Lake','Everest Base Camp','Bhaktapur Durbar Square','Patan Durbar Square','Janakpur','Chitwan National Park','Nagarkot','Bandipur','Ilam','Gosaikunda','Tilicho Lake','Dharan','Hetauda','Butwal','Tansen','Dolpo'] },
+  },
+  { id:'festivals', icon:'🎉',
+    ne:{ name:'चाडपर्वहरू', words:['दशैं','तिहार','होली','तीज','छठ','मघे सङ्क्रान्ति','इन्द्रजात्रा','बुद्ध जयन्ती','गाई जात्रा','लोसार','घोडे जात्रा','जनाई पूर्णिमा','शिवरात्री','ल्होसार','स्वस्थानी ब्रत','योमरी पुन्ही','बिस्का जात्रा','सकेला','उधौली','उभौली'] },
+    en:{ name:'Festivals', words:['Dashain','Tihar','Holi','Teej','Chhath','Maghe Sankranti','Indra Jatra','Buddha Jayanti','Gai Jatra','Losar','Ghode Jatra','Janai Purnima','Shivaratri','Lhosar','Swasthani Brata','Yomari Punhi','Biska Jatra','Sakela','Udhauli','Ubhauli'] },
+  },
+  { id:'objects', icon:'🪘',
+    ne:{ name:'परम्परागत वस्तुहरू', words:['धाका टोपी','खुकुरी','मादल','गुन्द्री','डोको','नाङ्लो','भकारी','पञ्च बाजा','सारङ्गी','डम्फू','घालेक','पटुका','दौरा सुरुवाल','गुन्यु चोलो','टिका थाल','पूजा घण्टी','पूजा दियो','तामाको गाग्री','काठको मुकुन्डो','परम्परागत थाली'] },
+    en:{ name:'Traditional Objects', words:['Dhaka Topi','Khukuri','Madal','Gundri','Doko','Namlo','Bhakari','Pancha Baja','Sarangi','Damphu','Ghalek','Patuka','Daura Suruwal','Gunyu Cholo','Tika Plate','Puja Bell','Puja Lamp','Copper Gagri','Wooden Mask','Traditional Thali'] },
+  },
+  { id:'animals', icon:'🐘',
+    ne:{ name:'नेपालका जनावर', words:['रेड पान्डा','हिम चितुवा','एक सिङ्गे गैंडा','बंगाल बाघ','डाँफे','याक','कस्तुरी मृग','लंगुर','हिमाली कालो भालु','जंगली सुँगुर','घडियाल','निलो भेडा','महाशीर माछा','दाँफे','हिमाली थार'] },
+    en:{ name:'Animals of Nepal', words:['Red Panda','Snow Leopard','One Horned Rhino','Bengal Tiger','Himalayan Monal','Yak','Musk Deer','Langur','Himalayan Black Bear','Wild Boar','Gharial Crocodile','Blue Sheep','Golden Mahseer','Danphe','Himalayan Tahr'] },
+  },
+  { id:'mountains', icon:'🏔',
+    ne:{ name:'हिमालहरू', words:['सगरमाथा','अन्नपूर्ण','धौलागिरी','मनास्लु','कञ्चनजङ्घा','माछापुच्छ्रे','लाङटाङ लिरुङ','अमा डाब्लम','चो ओयु','ल्होत्से','मकालु','तिलिचो पिक','पुमोरी','हिम्लुङ हिमाल','गणेश हिमाल'] },
+    en:{ name:'Mountains', words:['Mount Everest','Annapurna','Dhaulagiri','Manaslu','Kanchenjunga','Machhapuchhre','Langtang Lirung','Ama Dablam','Cho Oyu','Lhotse','Makalu','Tilicho Peak','Pumori','Himlung Himal','Ganesh Himal'] },
+  },
+  { id:'sports', icon:'⚽',
+    ne:{ name:'खेलकुद', words:['क्रिकेट','फुटबल','कबड्डी','भलिबल','डान्डाबियो','खो खो','धनुकला','टेबल टेनिस','ब्याडमिन्टन','म्याराथन','साइकलिङ','बास्केटबल','कुस्ती','बक्सिङ','ताइक्वान्दो'] },
+    en:{ name:'Nepali Sports', words:['Cricket','Football','Kabaddi','Volleyball','Dandi Biyo','Kho Kho','Archery','Table Tennis','Badminton','Marathon','Cycling','Basketball','Wrestling','Boxing','Taekwondo'] },
+  },
+  { id:'celebrities', icon:'🌟',
+    ne:{ name:'नेपाली सेलिब्रिटी', words:['राजेश हमाल','हरि बंश आचार्य','मदन कृष्ण श्रेष्ठ','प्रियंका कार्की','दीपक राज गिरी','दीपा श्री निरौला','सन्दीप लामिछाने','पारस खड्का','अनुराधा कोइराला','निखिल उप्रेती','नम्रता श्रेष्ठ','दयाहाङ राई','विपिन कार्की','स्वस्तिमा खड्का','बर्षा रौत'] },
+    en:{ name:'Nepali Celebrities', words:['Rajesh Hamal','Hari Bansha Acharya','Madan Krishna Shrestha','Priyanka Karki','Deepak Raj Giri','Deepa Shree Niraula','Sandeep Lamichhane','Paras Khadka','Anuradha Koirala','Nikhil Upreti','Namrata Shrestha','Dayahang Rai','Bipin Karki','Swastima Khadka','Barsha Raut'] },
+  },
+  { id:'movies', icon:'🎬',
+    ne:{ name:'नेपाली चलचित्र', words:['कबड्डी','कबड्डी कबड्डी','छक्का पञ्जा','लुट','पशुपति प्रसाद','कागबेनी','तलकजुङ vs तुल्के','जात्रा','जात्रै जात्रा','हस्टेल','हस्टेल रिटर्न्स','प्रेम गीत','प्रेम गीत २','बुलबुल','सेतो सूर्य'] },
+    en:{ name:'Nepali Movies', words:['Kabaddi','Kabaddi Kabaddi','Chhakka Panja','Loot','Pashupati Prasad','Kagbeni','Talakjung vs Tulke','Jatra','Jatrai Jatra','Hostel','Hostel Returns','Prem Geet','Prem Geet 2','Bulbul','Seto Surya'] },
+  },
+];
+
+// ========== GAME STATE ==========
+let state = {
+  selectedCategories: new Set(),
+  playerCount: 4,
+  imposterCount: 1,
+  imposterHintEnabled: false,
+  playerNames: [],
+  imposterIndices: [],
+  currentPlayer: 0,
+  startingPlayer: 0,
+  passOrder: [],
+  word: '',
+  wordCatId: null,
+  votes: {},
+};
+
+// ========== LANGUAGE ENGINE ==========
+function setLang(l) {
+  lang = l;
+  applyLangToggles();
+  applyStaticText();
+  renderCategories();
+  renderPlayerPreview();
+  renderHowToPlay();
+  renderDiscRules();
+  refreshVotingText();
+}
+
+function applyLangToggles() {
+  [['hLangNE','hLangEN'],['htpNE','htpEN'],['catNE','catEN'],
+   ['pcNE','pcEN'],['pnNE','pnEN'],['discNE','discEN'],['voteNE','voteEN']].forEach(([ne,en]) => {
+    const nel = document.getElementById(ne), enl = document.getElementById(en);
+    if (nel) { nel.classList.toggle('active', lang==='ne'); enl.classList.toggle('active', lang==='en'); }
+  });
+}
+
+function applyStaticText() {
+  const t = T[lang];
+  const s = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.textContent = val; };
+  s('homeTitle', t.homeTitle); s('homeSubtitle', t.homeSubtitle);
+  s('homePlayBtn', t.homePlay); s('homeHtpBtn', t.homeHtp); s('homeBadge', t.homeBadge);
+  ['htpBack','catBack','pcBack','pnBack'].forEach(id => s(id, t.backBtn));
+  s('htpTitle', t.htpTitle); s('catTitle', t.catTitle);
+  s('pcTitle', t.pcTitle); s('pcLabel', t.pcLabel); s('pcStartBtn', t.pcNext);
+  s('pnTitle', t.pnTitle); s('pnNamesLabel', t.pnNamesLabel);
+  s('pnImpLabel', t.pnImpLabel); s('pnStartBtn', t.pnStart);
+  s('pnHintTitle', t.pnHintTitle); s('pnHintDesc', t.pnHintDesc);
+  s('impHintLabel', t.impHintLabel);
+  s('rsLabel', t.rsLabel); s('rsBtn', t.rsBtnText);
+  s('discTitle', t.discTitle); s('discVoteBtn', t.discVote);
+  s('voteTitle', t.voteTitle); s('voteInstruct', t.voteInstruct);
+  s('catSelLabel', t.catSelLabel); s('catNextBtn', t.catNext);
+  updateSelAllBtn();
+  s('rk1', t.rk1); s('rk2', t.rk2); s('rk3', t.rk3);
+  s('resPlayAgain', t.resPlayAgain); s('resMenu', t.resMenu);
+  s('passWarning', t.warning); s('revealBtn', t.revealBtn); s('hidePassBtn', t.hidePass);
+  s('voteSubmitBtn', t.voteSubmit);
+  renderNameInputs();
+  updateImpHint();
+}
+
+function updateSelAllBtn() {
+  const btn = document.getElementById('selAllBtn');
+  if (btn) btn.textContent = state.selectedCategories.size === CATEGORIES.length ? T[lang].deselAll : T[lang].selAll;
+}
+
+// ========== NAVIGATION ==========
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ========== HOW TO PLAY ==========
+function renderHowToPlay() {
+  const body = document.getElementById('htpBody');
+  if (!body) return;
+  body.innerHTML = T[lang].htpSteps.map(([icon, title, desc]) =>
+    `<div class="htp-step"><div class="htp-icon">${icon}</div><div><div class="htp-title">${title}</div><div class="htp-desc">${desc}</div></div></div>`
+  ).join('');
+}
+
+// ========== CATEGORIES ==========
+function renderCategories() {
+  const grid = document.getElementById('catGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const sel = state.selectedCategories.has(cat.id);
+    const d = cat[lang];
+    const card = document.createElement('div');
+    card.className = 'cat-card' + (sel ? ' selected' : '');
+    card.dataset.sound = sel ? 'deselect' : 'select';
+    card.innerHTML = `<div class="cat-check">✓</div><div class="cat-icon">${cat.icon}</div><div class="cat-name">${d.name}</div><div class="cat-count">${T[lang].wordCount(d.words.length)}</div>`;
+    card.onclick = () => toggleCategory(cat.id);
+    grid.appendChild(card);
+  });
+  const cnt = state.selectedCategories.size;
+  document.getElementById('selCount').textContent = cnt;
+  document.getElementById('catNextBtn').style.display = cnt > 0 ? 'block' : 'none';
+  updateSelAllBtn();
+}
+
+function toggleCategory(id) {
+  if (state.selectedCategories.has(id)) state.selectedCategories.delete(id);
+  else state.selectedCategories.add(id);
+  renderCategories();
+}
+
+function toggleSelectAll() {
+  if (state.selectedCategories.size === CATEGORIES.length) state.selectedCategories.clear();
+  else CATEGORIES.forEach(c => state.selectedCategories.add(c.id));
+  renderCategories();
+}
+
+function goToPlayerCount() {
+  if (!state.selectedCategories.size) return;
+  goTo('player-count');
+  renderPlayerPreview();
+  const pills = document.getElementById('selectedCatPills');
+  pills.innerHTML = [...state.selectedCategories].map(id => {
+    const cat = CATEGORIES.find(c => c.id === id);
+    return `<div class="cat-pill">${cat.icon} ${cat[lang].name}</div>`;
+  }).join('');
+}
+
+// ========== PLAYER COUNT ==========
+function renderPlayerPreview() {
+  const wrap = document.getElementById('playersPreview');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  for (let i = 1; i <= state.playerCount; i++) {
+    const d = document.createElement('div');
+    d.className = 'player-dot';
+    d.textContent = i;
+    wrap.appendChild(d);
+  }
+  const cn = document.getElementById('countNum');
+  if (cn) cn.textContent = state.playerCount;
+  const m = document.getElementById('minusBtn'), p = document.getElementById('plusBtn');
+  if (m) m.disabled = state.playerCount <= 3;
+  if (p) p.disabled = state.playerCount >= 12;
+}
+
+function changeCount(delta) {
+  state.playerCount = Math.max(3, Math.min(12, state.playerCount + delta));
+  // clamp imposter count
+  state.imposterCount = Math.min(state.imposterCount, Math.floor(state.playerCount / 2));
+  renderPlayerPreview();
+  renderNameInputs();
+  updateImpHint();
+}
+
+function goToPlayerNames() {
+  if (!state.selectedCategories.size) return;
+  goTo('player-names');
+  renderNameInputs();
+  updateImpCountUI();
+  // update category pills
+  const pills = document.getElementById('selectedCatPills');
+  if (pills) pills.innerHTML = [...state.selectedCategories].map(id => {
+    const cat = CATEGORIES.find(c => c.id === id);
+    return `<div class="cat-pill">${cat.icon} ${cat[lang].name}</div>`;
+  }).join('');
+}
+
+// ========== PLAYER NAMES ==========
+function renderNameInputs() {
+  const list = document.getElementById('nameInputList');
+  if (!list) return;
+  // preserve existing values
+  const existing = [...list.querySelectorAll('.name-input-field')].map(i => i.value);
+  list.innerHTML = '';
+  for (let i = 0; i < state.playerCount; i++) {
+    const row = document.createElement('div');
+    row.className = 'name-input-row';
+    row.innerHTML = `
+      <div class="name-input-avatar">${i+1}</div>
+      <input class="name-input-field" type="text" maxlength="20"
+        placeholder="${T[lang].namePlaceholder(i+1)}"
+        value="${existing[i] || ''}" />
+    `;
+    list.appendChild(row);
+  }
+}
+
+function getPlayerNames() {
+  const inputs = document.querySelectorAll('.name-input-field');
+  return [...inputs].map((inp, i) => inp.value.trim() || T[lang].playerShort(i+1));
+}
+
+// ========== IMPOSTER COUNT ==========
+function changeImpCount(delta) {
+  const max = Math.floor(state.playerCount / 2);
+  state.imposterCount = Math.max(1, Math.min(max, state.imposterCount + delta));
+  updateImpCountUI();
+}
+
+function updateImpCountUI() {
+  document.getElementById('impCountNum').textContent = state.imposterCount;
+  const max = Math.floor(state.playerCount / 2);
+  document.getElementById('impMinusBtn').disabled = state.imposterCount <= 1;
+  document.getElementById('impPlusBtn').disabled = state.imposterCount >= max;
+  updateImpHint();
+}
+
+function updateImpHint() {
+  const el = document.getElementById('pnImpHint');
+  if (!el) return;
+  el.textContent = lang === 'ne'
+    ? `${state.imposterCount} गुप्तचर · ${state.playerCount} खेलाडी`
+    : `${state.imposterCount} imposter${state.imposterCount > 1 ? 's' : ''} · ${state.playerCount} players`;
+}
+
+// ========== IMPOSTER HINT TOGGLE ==========
+function toggleImposterHint() {
+  state.imposterHintEnabled = !state.imposterHintEnabled;
+  const btn = document.getElementById('hintToggleBtn');
+  btn.classList.toggle('on', state.imposterHintEnabled);
+}
+
+// ========== START GAME ==========
+function startGame() {
+  state.playerNames = getPlayerNames();
+  // pick random word
+  let pool = [];
+  state.selectedCategories.forEach(id => {
+    const cat = CATEGORIES.find(c => c.id === id);
+    cat[lang].words.forEach(w => pool.push({ word: w, catId: id }));
+  });
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  state.word = pick.word;
+  state.wordCatId = pick.catId;
+  // pick imposters (unique random indices)
+  const indices = Array.from({length: state.playerCount}, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  state.imposterIndices = indices.slice(0, state.imposterCount);
+  // pick random starting player
+  state.startingPlayer = Math.floor(Math.random() * state.playerCount);
+  state.currentPlayer = 0;
+  state.votes = {};
+  showRandomStart();
+}
+
+// ========== RANDOM START SCREEN ==========
+function showRandomStart() {
+  const name = state.playerNames[state.startingPlayer];
+  const t = T[lang];
+  document.getElementById('rsLabel').textContent = t.rsLabel;
+  document.getElementById('rsName').textContent = name;
+  document.getElementById('rsSub').textContent = t.rsSub(name);
+  document.getElementById('rsBtn').textContent = t.rsBtnText;
+  goTo('random-start');
+}
+
+function beginPassPhone() {
+  // Build pass order starting from the randomly chosen player, wrapping around
+  state.passOrder = [];
+  for (let i = 0; i < state.playerCount; i++) {
+    state.passOrder.push((state.startingPlayer + i) % state.playerCount);
+  }
+  state.currentPlayer = 0; // index into passOrder, not player index
+  showPassPhone();
+}
+
+// ========== PASS PHONE ==========
+function showPassPhone() {
+  const playerIdx = state.passOrder[state.currentPlayer];
+  const seq = state.currentPlayer + 1;
+  const name = state.playerNames[playerIdx] || T[lang].playerShort(seq);
+  document.getElementById('passPlayerNum').textContent = T[lang].passNum(seq);
+  document.getElementById('passPlayerName').textContent = name;
+  document.getElementById('passWarning').textContent = T[lang].warning;
+  document.getElementById('revealBtn').textContent = T[lang].revealBtn;
+  goTo('pass-phone');
+}
+
+function revealRole() {
+  const playerIdx = state.passOrder[state.currentPlayer];
+  const cat = CATEGORIES.find(c => c.id === state.wordCatId);
+  const isImp = state.imposterIndices.includes(playerIdx);
+  const t = T[lang];
+  document.getElementById('revealCard').className = 'reveal-card ' + (isImp ? 'imposter' : 'normal');
+  document.getElementById('revealLabel').textContent = isImp ? t.roleImpLabel : t.roleLabel;
+  document.getElementById('revealIcon').textContent = isImp ? '🕵️' : cat.icon;
+  document.getElementById('revealWord').textContent = isImp ? t.impWord : state.word;
+  document.getElementById('revealHint').textContent = isImp ? t.impHint : t.normalHint;
+  document.getElementById('hidePassBtn').textContent = t.hidePass;
+
+  // Show category hint box only for imposters when enabled
+  const hintBox = document.getElementById('impHintBox');
+  const showHint = isImp && state.imposterHintEnabled;
+  hintBox.style.display = showHint ? 'block' : 'none';
+  if (showHint) {
+    document.getElementById('impHintLabel').textContent = t.impHintLabel;
+    document.getElementById('impHintText').textContent = cat.icon + '  ' + cat[lang].name;
+  }
+
+  goTo('role-reveal');
+}
+
+function nextPlayer() {
+  state.currentPlayer++;
+  if (state.currentPlayer < state.playerCount) showPassPhone();
+  else startDiscussion();
+}
+
+// ========== DISCUSSION ==========
+function renderDiscRules() {
+  const el = document.getElementById('discRules');
+  if (!el) return;
+  el.innerHTML = T[lang].discRules.map((r, i) =>
+    `<div class="rule-item"><div class="rule-num">${i+1}</div><div>${r}</div></div>`
+  ).join('');
+}
+
+function startDiscussion() {
+  renderDiscRules();
+  renderVoting();
+  goTo('discussion');
+}
+
+// ========== VOTING ==========
+function renderVoting() {
+  const list = document.getElementById('voteList');
+  if (!list) return;
+  list.innerHTML = '';
+  for (let i = 0; i < state.playerCount; i++) {
+    const votedFor = Object.keys(state.votes).map(Number).includes(i);
+    const name = state.playerNames[i] || T[lang].playerLabel(i+1);
+    const item = document.createElement('div');
+    item.className = 'vote-item' + (votedFor ? ' voted' : '');
+    item.dataset.sound = 'vote';
+    item.innerHTML = `<div class="vote-avatar">${i+1}</div><div class="vote-name">${name}</div><div class="vote-check">✓</div>`;
+    item.onclick = () => castVote(i);
+    list.appendChild(item);
+  }
+  updateTally();
+}
+
+function refreshVotingText() {
+  const list = document.getElementById('voteList');
+  if (!list) return;
+  [...list.children].forEach((item, i) => {
+    const nm = item.querySelector('.vote-name');
+    if (nm) nm.textContent = state.playerNames[i] || T[lang].playerLabel(i+1);
+  });
+  const inst = document.getElementById('voteInstruct');
+  if (inst) inst.textContent = T[lang].voteInstruct;
+  const sub = document.getElementById('voteSubmitBtn');
+  if (sub) sub.textContent = T[lang].voteSubmit;
+  updateTally();
+}
+
+function castVote(targetIndex) {
+  Object.keys(state.votes).forEach(k => delete state.votes[k]);
+  state.votes[targetIndex] = 1;
+  document.querySelectorAll('.vote-item').forEach((el, i) => el.classList.toggle('voted', i === targetIndex));
+  const sub = document.getElementById('voteSubmitBtn');
+  sub.style.display = 'block';
+  sub.textContent = T[lang].voteSubmit;
+  updateTally();
+}
+
+function updateTally() {
+  const el = document.getElementById('voteTally');
+  if (!el) return;
+  const target = Object.keys(state.votes)[0];
+  if (target !== undefined) {
+    const name = state.playerNames[parseInt(target)] || T[lang].playerLabel(parseInt(target)+1);
+    el.innerHTML = `<div>${T[lang].voteOn(name)}</div>`;
+  } else {
+    el.innerHTML = `<div style="color:var(--text-muted)">${T[lang].noVote}</div>`;
+  }
+}
+
+// ========== RESULTS ==========
+function showResults() {
+  const votedIndex = parseInt(Object.keys(state.votes)[0]);
+  const correct = state.imposterIndices.includes(votedIndex);
+  const cat = CATEGORIES.find(c => c.id === state.wordCatId);
+  const t = T[lang];
+
+  document.getElementById('resultTrophy').textContent = correct ? '🎊' : '😈';
+  document.getElementById('resultTitle').textContent = correct ? t.resultWin : t.resultLose;
+  document.getElementById('resultSubtitle').textContent = correct ? t.resultWinSub : t.resultLoseSub;
+
+  // Show imposter name(s) from playerNames — never NaN
+  const impNames = state.imposterIndices
+    .map(i => state.playerNames[i] || T[lang].playerShort(i + 1))
+    .join(', ');
+  document.getElementById('resultImposter').textContent = impNames;
+  document.getElementById('resultWord').textContent = state.word;
+  document.getElementById('resultCat').textContent = cat.icon + ' ' + cat[lang].name;
+  document.getElementById('rk1').textContent = t.rk1;
+  document.getElementById('rk2').textContent = t.rk2;
+  document.getElementById('rk3').textContent = t.rk3;
+  document.getElementById('resPlayAgain').textContent = t.resPlayAgain;
+  document.getElementById('resMenu').textContent = t.resMenu;
+
+  goTo('results');
+  if (correct) { spawnConfetti(); playCaughtSound(); }
+  else { playEscapedSound(); }
+}
+
+function playAgain() {
+  state.currentPlayer = 0;
+  state.votes = {};
+  startGame();
+}
+
+// ========== SOUNDS (Web Audio API — no external files needed) ==========
+let soundEnabled = true;
+
+function toggleSound() {
+  if (soundEnabled) sndToggle();
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('soundToggleBtn');
+  btn.classList.toggle('muted', !soundEnabled);
+  btn.textContent = soundEnabled ? '🔊' : '🔇';
+}
+
+function getAudioCtx() {
+  if (!soundEnabled) return null;
+  if (!window._audioCtx) window._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return window._audioCtx;
+}
+
+function playTone(freq, type, start, duration, gainVal, ctx) {
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = type; osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+  gain.gain.setValueAtTime(gainVal, ctx.currentTime + start);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + duration);
+  osc.start(ctx.currentTime + start);
+  osc.stop(ctx.currentTime + start + duration);
+}
+
+function playCaughtSound() {
+  // Triumphant fanfare: ascending chord burst + chime notes
+  try {
+    const ctx = getAudioCtx();
+    // Bass punch
+    playTone(80, 'sine', 0, 0.3, 0.6, ctx);
+    // Chord hits
+    [[261, 0], [329, 0.05], [392, 0.1], [523, 0.15]].forEach(([f, t]) =>
+      playTone(f, 'triangle', t, 0.5, 0.4, ctx));
+    // Bright chime cascade
+    [[784, 0.3], [1046, 0.45], [1318, 0.6], [1568, 0.75], [2093, 0.9]].forEach(([f, t]) =>
+      playTone(f, 'sine', t, 0.4, 0.25, ctx));
+    // Final resolution
+    playTone(523, 'sine', 1.1, 0.6, 0.3, ctx);
+    playTone(659, 'sine', 1.2, 0.6, 0.25, ctx);
+    playTone(784, 'sine', 1.3, 0.8, 0.3, ctx);
+  } catch(e) {}
+}
+
+function playEscapedSound() {
+  // Eerie descending tone — sneaky, tense
+  try {
+    const ctx = getAudioCtx();
+    // Low ominous drone
+    playTone(110, 'sawtooth', 0, 1.2, 0.3, ctx);
+    playTone(82, 'sine', 0.1, 1.5, 0.25, ctx);
+    // Descending sinister notes
+    [[440, 0.2], [370, 0.45], [311, 0.7], [261, 0.95], [220, 1.2]].forEach(([f, t]) =>
+      playTone(f, 'triangle', t, 0.35, 0.2, ctx));
+    // Creepy high whine fade
+    playTone(880, 'sine', 0.3, 1.0, 0.08, ctx);
+    playTone(740, 'sine', 0.8, 0.8, 0.06, ctx);
+    // Final low thud
+    playTone(60, 'sine', 1.5, 0.5, 0.4, ctx);
+  } catch(e) {}
+}
+
+// ========== UI BUTTON SOUNDS ==========
+// Each sound is tuned to the emotional weight of its action
+
+function sndTap() {
+  // Soft neutral tap — back buttons, lang toggle, minor navigation
+  try {
+    const ctx = getAudioCtx();
+    playTone(600, 'sine', 0, 0.08, 0.06, ctx);
+    playTone(480, 'sine', 0.02, 0.07, 0.03, ctx);
+  } catch(e) {}
+}
+
+function sndSelect() {
+  // Bright click — category card select/deselect
+  try {
+    const ctx = getAudioCtx();
+    playTone(880, 'sine', 0, 0.06, 0.09, ctx);
+    playTone(1100, 'sine', 0.04, 0.07, 0.05, ctx);
+  } catch(e) {}
+}
+
+function sndDeselect() {
+  // Muted click going down — deselect
+  try {
+    const ctx = getAudioCtx();
+    playTone(660, 'sine', 0, 0.06, 0.07, ctx);
+    playTone(440, 'sine', 0.04, 0.07, 0.04, ctx);
+  } catch(e) {}
+}
+
+function sndNext() {
+  // Forward — moving to next screen, positive progression
+  try {
+    const ctx = getAudioCtx();
+    playTone(440, 'triangle', 0, 0.1, 0.1, ctx);
+    playTone(554, 'triangle', 0.07, 0.1, 0.08, ctx);
+    playTone(659, 'triangle', 0.14, 0.15, 0.07, ctx);
+  } catch(e) {}
+}
+
+function sndBack() {
+  // Back — gentle descending tone
+  try {
+    const ctx = getAudioCtx();
+    playTone(500, 'sine', 0, 0.1, 0.07, ctx);
+    playTone(380, 'sine', 0.07, 0.12, 0.05, ctx);
+  } catch(e) {}
+}
+
+function sndReveal() {
+  // Reveal role — suspenseful, slightly dramatic
+  try {
+    const ctx = getAudioCtx();
+    playTone(200, 'sine', 0, 0.15, 0.15, ctx);
+    playTone(300, 'sine', 0.1, 0.15, 0.1, ctx);
+    playTone(450, 'triangle', 0.2, 0.2, 0.12, ctx);
+    playTone(600, 'sine', 0.35, 0.25, 0.08, ctx);
+  } catch(e) {}
+}
+
+function sndHide() {
+  // Hide & pass — clean wrap-up chime
+  try {
+    const ctx = getAudioCtx();
+    playTone(784, 'sine', 0, 0.08, 0.08, ctx);
+    playTone(659, 'sine', 0.06, 0.1, 0.06, ctx);
+  } catch(e) {}
+}
+
+function sndVote() {
+  // Cast vote — decisive, weighted thump
+  try {
+    const ctx = getAudioCtx();
+    playTone(180, 'sine', 0, 0.12, 0.2, ctx);
+    playTone(260, 'triangle', 0.04, 0.1, 0.1, ctx);
+    playTone(520, 'sine', 0.1, 0.08, 0.06, ctx);
+  } catch(e) {}
+}
+
+function sndStart() {
+  // Game start — energetic upward sweep
+  try {
+    const ctx = getAudioCtx();
+    [[261,0],[329,0.06],[392,0.12],[523,0.18]].forEach(([f,t]) =>
+      playTone(f, 'triangle', t, 0.18, 0.12, ctx));
+    playTone(784, 'sine', 0.26, 0.3, 0.1, ctx);
+  } catch(e) {}
+}
+
+function sndToggle() {
+  // Toggle on/off — switch click feel
+  try {
+    const ctx = getAudioCtx();
+    playTone(900, 'square', 0, 0.04, 0.04, ctx);
+    playTone(1200, 'sine', 0.03, 0.06, 0.05, ctx);
+  } catch(e) {}
+}
+
+function sndCounter() {
+  // +/- counter — light tick
+  try {
+    const ctx = getAudioCtx();
+    playTone(740, 'sine', 0, 0.05, 0.07, ctx);
+  } catch(e) {}
+}
+
+function sndPlayAgain() {
+  // Play again — bouncy restart
+  try {
+    const ctx = getAudioCtx();
+    [[392,0],[523,0.08],[659,0.16],[784,0.24]].forEach(([f,t]) =>
+      playTone(f, 'sine', t, 0.12, 0.09, ctx));
+  } catch(e) {}
+}
+
+// Wire sounds to all buttons via data-sound attribute
+document.addEventListener('click', e => {
+  if (!soundEnabled) return;
+  const btn = e.target.closest('[data-sound]');
+  if (!btn) return;
+  const sounds = {
+    tap: sndTap, select: sndSelect, deselect: sndDeselect,
+    next: sndNext, back: sndBack, reveal: sndReveal,
+    hide: sndHide, vote: sndVote, start: sndStart,
+    toggle: sndToggle, counter: sndCounter, playagain: sndPlayAgain,
+  };
+  const fn = sounds[btn.dataset.sound];
+  if (fn) fn();
+});
+function spawnConfetti() {
+  const c = document.getElementById('confettiContainer');
+  c.innerHTML = '';
+  const cols = ['#D32F2F','#FFC107','#4CAF50','#2196F3','#9C27B0','#FF5722','#FFF'];
+  for (let i = 0; i < 90; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `left:${Math.random()*100}%;top:0;background:${cols[Math.floor(Math.random()*cols.length)]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>0.5?'50%':'2px'};animation:confettiFall ${1.5+Math.random()*2}s ${Math.random()*1.2}s linear forwards;`;
+    c.appendChild(el);
+  }
+  setTimeout(() => c.innerHTML = '', 5500);
+}
+
+// ========== INIT ==========
+applyLangToggles();
+applyStaticText();
+renderHowToPlay();
+renderCategories();
+renderPlayerPreview();
+renderDiscRules();
+</script>
+</body>
+</html>
