@@ -36,11 +36,46 @@ body {
   justify-content: center;
 }
  
-/* CURSOR */
+/* CURSOR — desktop only */
 .cursor { position:fixed; top:0; left:0; pointer-events:none; z-index:9999; mix-blend-mode:difference; }
 .cursor-dot { width:8px; height:8px; background:var(--red); border-radius:50%; position:absolute; transform:translate(-50%,-50%); }
 .cursor-ring { width:36px; height:36px; border:1px solid var(--white); border-radius:50%; position:absolute; transform:translate(-50%,-50%); transition:all 0.18s cubic-bezier(.25,.46,.45,.94); }
 .cursor-ring.hovered { width:64px; height:64px; border-color:var(--red); background:var(--red-glow); }
+ 
+/* TOUCH RIPPLE — mobile only */
+.touch-ripple {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%) scale(0);
+  animation: rippleOut 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+.touch-ripple-outer {
+  width: 70px; height: 70px;
+  border: 1.5px solid var(--red);
+  background: rgba(228,28,28,0.08);
+}
+.touch-ripple-inner {
+  width: 18px; height: 18px;
+  background: var(--red);
+  opacity: 0.7;
+}
+@keyframes rippleOut {
+  0%   { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+  60%  { opacity: 0.6; }
+  100% { transform: translate(-50%,-50%) scale(1); opacity: 0; }
+}
+ 
+@media (hover: hover) {
+  /* desktop: hide ripple, show cursor */
+  .touch-ripple { display: none; }
+}
+@media (hover: none) {
+  /* touch: hide cursor, restore default */
+  html { cursor: auto; }
+  .cursor { display: none; }
+}
  
 /* NOISE */
 .noise { position:fixed; inset:0; pointer-events:none; z-index:9998; opacity:0.03;
@@ -497,33 +532,73 @@ body {
   <span class="status-sep">|</span>
   <span class="status-item"><span class="status-dot dot-red"></span>UX/UI Designer</span>
   <span class="status-sep">|</span>
-  <span class="status-item"><span class="status-dot dot-white"></span>Kathmandu, NP</span>
+  <span class="status-item"><span class="status-dot dot-white"></span>Nyadhal, Lalitpur, NP</span>
 </div>
  
 <script>
-// Custom cursor
-const dot = document.getElementById('dot');
-const ring = document.getElementById('ring');
-let mx = 0, my = 0, rx = 0, ry = 0;
+const isTouchDevice = () => window.matchMedia('(hover: none)').matches;
  
-document.addEventListener('mousemove', e => {
-  mx = e.clientX; my = e.clientY;
-  dot.style.left = mx + 'px';
-  dot.style.top = my + 'px';
-});
+// ── Desktop: custom cursor ────────────────────────────────────────────────
+if (!isTouchDevice()) {
+  const dot = document.getElementById('dot');
+  const ring = document.getElementById('ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
  
-(function animateRing() {
-  rx += (mx - rx) * 0.13;
-  ry += (my - ry) * 0.13;
-  ring.style.left = rx + 'px';
-  ring.style.top = ry + 'px';
-  requestAnimationFrame(animateRing);
-})();
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    dot.style.left = mx + 'px';
+    dot.style.top = my + 'px';
+  });
  
-document.querySelectorAll('a,button').forEach(el => {
-  el.addEventListener('mouseenter', () => ring.classList.add('hovered'));
-  el.addEventListener('mouseleave', () => ring.classList.remove('hovered'));
-});
+  (function animateRing() {
+    rx += (mx - rx) * 0.13;
+    ry += (my - ry) * 0.13;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(animateRing);
+  })();
+ 
+  document.querySelectorAll('a,button').forEach(el => {
+    el.addEventListener('mouseenter', () => ring.classList.add('hovered'));
+    el.addEventListener('mouseleave', () => ring.classList.remove('hovered'));
+  });
+}
+ 
+// ── Mobile: touch ripple ──────────────────────────────────────────────────
+if (isTouchDevice()) {
+  function spawnRipple(x, y, isInteractive) {
+    // outer ring
+    const outer = document.createElement('div');
+    outer.className = 'touch-ripple touch-ripple-outer';
+    outer.style.left = x + 'px';
+    outer.style.top  = y + 'px';
+    if (isInteractive) {
+      outer.style.borderColor = '#fff';
+      outer.style.background  = 'rgba(255,255,255,0.06)';
+      outer.style.width  = '90px';
+      outer.style.height = '90px';
+    }
+    document.body.appendChild(outer);
+ 
+    // inner dot
+    const inner = document.createElement('div');
+    inner.className = 'touch-ripple touch-ripple-inner';
+    inner.style.left = x + 'px';
+    inner.style.top  = y + 'px';
+    inner.style.animationDuration = '0.4s';
+    document.body.appendChild(inner);
+ 
+    outer.addEventListener('animationend', () => outer.remove());
+    inner.addEventListener('animationend', () => inner.remove());
+  }
+ 
+  document.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    const target = document.elementFromPoint(t.clientX, t.clientY);
+    const isInteractive = target && target.closest('a, button');
+    spawnRipple(t.clientX, t.clientY, !!isInteractive);
+  }, { passive: true });
+}
 </script>
 </body>
 </html>
